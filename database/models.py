@@ -1,4 +1,3 @@
-
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -22,6 +21,8 @@ class Image(db.Model):
     avg_red = db.Column(db.Float, nullable=True)
     avg_green = db.Column(db.Float, nullable=True)
     avg_blue = db.Column(db.Float, nullable=True)
+    contrast = db.Column(db.Float, nullable=True)
+    edge_count = db.Column(db.Integer, nullable=True)
 
     # Coordonnées GPS associées à l'image
     latitude = db.Column(db.Float)

@@ -389,7 +389,7 @@
       </div>
 
       <!-- Affichage des vignettes des images annotées -->
-      <!-- Affichage des métadonnées au survol de chaque image via l'attribut 'title' -->
+      <!-- Affichage avancé des métadonnées au survol de chaque image via infobulle enrichie -->
       <!-- Détails des images -->
       <div class="row">
         {% for img in images %}
@@ -398,7 +398,13 @@
             <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}"
                  class="card-img-top"
                  alt="image"
-                 title="Nom : {{ img.filename }} | Taille : {{ '%.2f'|format(img.file_size_kb) }} KB | Dimensions : {{ img.width }}x{{ img.height }} px">
+                 data-title="{{ img.filename }}"
+                 data-size="{{ '%.2f'|format(img.file_size_kb) }}"
+                 data-dimensions="{{ img.width }}x{{ img.height }}"
+                 data-contrast="{% if img.contrast is not none %}{{ '%.2f'|format(img.contrast) }}{% else %}–{% endif %}"
+                 data-edgecount="{% if img.edge_count is not none %}{{ '%.2f'|format(img.edge_count) }}{% else %}–{% endif %}"
+                 data-annotation="{{ img.annotation if img.annotation else 'Non annotée' }}"
+                 data-location="Lat: {{ img.latitude if img.latitude is not none else '–' }} / Long: {{ img.longitude if img.longitude is not none else '–' }}">
             <div class="card-body">
               <h5 class="card-title">
                 {% if img.annotation %}
@@ -410,6 +416,13 @@
               <p class="card-text">
                 Dimensions : {{ img.width }}x{{ img.height }} px<br>
                 Taille : {{ "%.2f"|format(img.file_size_kb) }} KB<br>
+                Contraste : 
+                {% if img.contrast is not none %}
+                  {{ "%.2f"|format(img.contrast) }}
+                {% else %}
+                  –
+                {% endif %}
+                <br>
                 Latitude : {{ img.latitude if img.latitude is not none else '–' }}<br>
                 Longitude : {{ img.longitude if img.longitude is not none else '–' }}
               </p>
@@ -465,9 +478,18 @@
     if (index < 0 || index >= images.length) return;
     const img = images[index];
     const src = img.src;
-    const title = img.getAttribute('title');
+    // Générer dynamiquement le contenu des métadonnées pour la modale
+    const metaHtml = `
+      Nom : ${img.dataset.title}<br>
+      Annotation : ${img.dataset.annotation}<br>
+      Taille : ${img.dataset.size} KB<br>
+      Dimensions : ${img.dataset.dimensions}<br>
+      Contraste : ${img.dataset.contrast}<br>
+      Contours : ${img.dataset.edgecount}<br>
+      ${img.dataset.location}
+    `;
     document.getElementById('modalImage').src = src;
-    document.getElementById('modalMetadata').innerText = title;
+    document.getElementById('modalMetadata').innerHTML = metaHtml;
     const modal = new bootstrap.Modal(document.getElementById('imageModal'));
     modal.show();
   }
@@ -480,7 +502,8 @@
       currentIndex = (currentIndex - 1 + images.length) % images.length;
       showImage(currentIndex);
     } else if (event.key.toLowerCase() === 'i') {
-      alert(images[currentIndex].getAttribute('title'));
+      // Affiche la modale enrichie comme au clic
+      showImage(currentIndex);
     }
   });
 
@@ -489,6 +512,43 @@
     img.addEventListener('click', () => {
       currentIndex = index;
       showImage(index);
+    });
+  });
+
+  // Initialisation -- infobulle enrichie au survol de chaque image
+  const tooltip = document.createElement('div');
+  tooltip.style.position = 'fixed';
+  tooltip.style.padding = '8px';
+  tooltip.style.backgroundColor = 'rgba(0,0,0,0.75)';
+  tooltip.style.color = 'white';
+  tooltip.style.borderRadius = '5px';
+  tooltip.style.fontSize = '14px';
+  tooltip.style.pointerEvents = 'none';
+  tooltip.style.display = 'none';
+  tooltip.style.zIndex = '10000';
+  document.body.appendChild(tooltip);
+
+  images.forEach((img) => {
+    img.addEventListener('mouseover', (e) => {
+      tooltip.innerHTML = `
+        <strong>${img.dataset.title}</strong><br>
+        Annotation : ${img.dataset.annotation}<br>
+        Taille : ${img.dataset.size} KB<br>
+        Dimensions : ${img.dataset.dimensions}<br>
+        Contraste : ${img.dataset.contrast}<br>
+        Contours : ${img.dataset.edgecount}<br>
+        ${img.dataset.location}
+      `;
+      tooltip.style.display = 'block';
+    });
+
+    img.addEventListener('mousemove', (e) => {
+      tooltip.style.left = (e.pageX + 10) + 'px';
+      tooltip.style.top = (e.pageY + 10) + 'px';
+    });
+
+    img.addEventListener('mouseout', () => {
+      tooltip.style.display = 'none';
     });
   });
 </script>

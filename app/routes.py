@@ -1,3 +1,18 @@
+import cv2
+import numpy as np
+
+# Calcul du contraste d'une image (écart type des niveaux de gris)
+def calculate_contrast(img_path):
+    img = cv2.imread(img_path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return float(gray.std())
+
+# Calcul du nombre de contours (bords) détectés dans l'image
+def calculate_edge_count(img_path):
+    img = cv2.imread(img_path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 100, 200)
+    return int(np.sum(edges > 0))
 from flask import Blueprint, render_template, request, redirect, url_for, current_app, Response, flash, session
 import os
 from werkzeug.utils import secure_filename
@@ -37,6 +52,8 @@ def upload():
 
         features = extract_features(saved_path)
         predicted_label = rule_based_prediction(features)
+        contrast = calculate_contrast(saved_path)
+        edge_count = calculate_edge_count(saved_path)
 
         new_image = Image(
             filename=new_filename,
@@ -48,7 +65,9 @@ def upload():
             file_size_kb=features['file_size_kb'],
             avg_red=features['avg_red'],
             avg_green=features['avg_green'],
-            avg_blue=features['avg_blue']
+            avg_blue=features['avg_blue'],
+            contrast=contrast,
+            edge_count=edge_count
         )
 
         db.session.add(new_image)
