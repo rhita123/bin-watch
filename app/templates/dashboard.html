@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <title>BinWatch – Tableau de bord</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+      body {
+        background-color: #f8f9fa;
+      }
+      .card-title {
+        font-weight: bold;
+      }
+      .stats-box {
+        background-color: #e9ecef;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      .filter-form {
+        max-width: 300px;
+      }
+      #map {
+        height: 400px;
+        width: 100%;
+        margin-bottom: 40px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body class="p-4">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">BinWatch</a>
+        <div class="collapse navbar-collapse">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.index') }}">Accueil</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            </li>
+          </ul>
+        </div>
+        <form method="get" action="{{ url_for('main.set_language', lang_code='fr') }}" class="me-2">
+          <select class="form-select form-select-sm" onchange="window.location.href='/set_language/' + this.value">
+            <option value="fr" {% if get_locale() == 'fr' %}selected{% endif %}>Français</option>
+            <option value="en" {% if get_locale() == 'en' %}selected{% endif %}>English</option>
+          </select>
+        </form>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">BinWatch – Dashboard</h1>
+        <a href="{{ url_for('main.download_csv') }}" class="btn btn-success">Télécharger CSV</a>
+      </div>
+
+      <!-- Statistiques -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="stats-box text-center">
+            <h5>Total d’images</h5>
+            <p class="display-6">{{ total }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stats-box text-center text-success">
+            <h5>Images pleines</h5>
+            <p class="display-6">{{ pleines }}</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stats-box text-center text-primary">
+            <h5>Images vides</h5>
+            <p class="display-6">{{ vides }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtres -->
+      <form method="get" class="filter-form mb-4">
+        <label for="filter" class="form-label">Filtrer par annotation :</label>
+        <select name="filter" class="form-select mb-2" onchange="this.form.submit()">
+          <option value="">Toutes</option>
+          <option value="pleine" {% if selected_filter == 'pleine' %}selected{% endif %}>Pleine</option>
+          <option value="vide" {% if selected_filter == 'vide' %}selected{% endif %}>Vide</option>
+        </select>
+
+        <label for="min_size" class="form-label mt-2">Taille minimale (KB) :</label>
+        <input type="number" name="min_size" class="form-control" placeholder="Ex : 200" value="{{ selected_min_size or '' }}" onchange="this.form.submit()">
+
+        <label for="min_date" class="form-label mt-2">Date minimale :</label>
+        <input type="date" name="min_date" class="form-control" value="{{ selected_min_date or '' }}" onchange="this.form.submit()">
+      </form>
+
+      <!-- Carte -->
+      <h5>Carte des localisations</h5>
+      <div id="map"></div>
+
+      <!-- Camembert dynamique avec Chart.js -->
+      <div class="mb-5 text-center">
+        <h5>Répartition des annotations (Chart.js)</h5>
+        <div style="max-width: 400px; margin: 0 auto;">
+          <canvas id="statusChart"></canvas>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+          const ctx = document.getElementById('statusChart').getContext('2d');
+          const statusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: ['Pleine', 'Vide'],
+              datasets: [{
+                label: 'État des poubelles',
+                data: [{{ pleines }}, {{ vides }}],
+                backgroundColor: ['#dc3545', '#198754'],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                },
+                title: {
+                  display: false
+                }
+              }
+            }
+          });
+        </script>
+        <div class="mb-3 mt-3">
+          <label for="chartFilter" class="form-label">Filtrer le graphique :</label>
+          <select id="chartFilter" class="form-select" onchange="filterChart(this.value)">
+            <option value="all">Toutes</option>
+            <option value="pleine">Pleine</option>
+            <option value="vide">Vide</option>
+          </select>
+        </div>
+
+        <script>
+          function filterChart(filterValue) {
+            let full = {{ pleines }};
+            let empty = {{ vides }};
+            let newData;
+
+            if (filterValue === "pleine") {
+              newData = [full, 0];
+            } else if (filterValue === "vide") {
+              newData = [0, empty];
+            } else {
+              newData = [full, empty];
+            }
+
+            statusChart.data.datasets[0].data = newData;
+            statusChart.update();
+          }
+        </script>
+      </div>
+
+      <!-- Histogramme dynamique des tailles -->
+      <div class="mb-5 text-center">
+        <h5>Histogramme des tailles de fichiers (Chart.js)</h5>
+        <div style="max-width: 600px; margin: auto;">
+          <canvas id="sizeHistogram"></canvas>
+        </div>
+        <script>
+          const sizeHistogram = new Chart(document.getElementById('sizeHistogram').getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: {{ size_labels|tojson }},
+              datasets: [{
+                label: "Nombre d'images",
+                data: {{ size_counts|tojson }},
+                backgroundColor: '#0d6efd'
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                title: {
+                  display: true,
+                  text: 'Répartition des tailles de fichiers'
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: "Nombre d'images"
+                  }
+                },
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Taille (en KB)'
+                  }
+                }
+              }
+            }
+          });
+        </script>
+      </div>
+
+      <!-- Courbe cumulative dynamique -->
+      <div class="mb-5 text-center">
+        <h5>Courbe cumulative des images uploadées (Chart.js)</h5>
+        <div style="max-width: 700px; margin: auto;">
+          <canvas id="cumulativeChart"></canvas>
+        </div>
+        <script>
+          const cumulativeChart = new Chart(document.getElementById('cumulativeChart').getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: {{ cumulative_labels|tojson }},
+              datasets: [{
+                label: 'Nombre cumulé d\'images',
+                data: {{ cumulative_counts|tojson }},
+                borderColor: '#20c997',
+                tension: 0.3,
+                fill: false
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top'
+                },
+                title: {
+                  display: true,
+                  text: 'Évolution dans le temps'
+                }
+              },
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Date'
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Images cumulées'
+                  }
+                }
+              }
+            }
+          });
+        </script>
+      </div>
+
+      <!-- Nuage de points : taille vs couleur moyenne -->
+      <div class="mb-5 text-center">
+        <h5>Nuage de points : taille vs couleur moyenne</h5>
+        <div style="max-width: 700px; margin: auto;">
+          <canvas id="scatterChart"></canvas>
+        </div>
+        <script>
+          // Chart.js already loaded above
+          const scatterData = {
+            datasets: [
+              {
+                label: 'Pleine',
+                data: [
+                  {% for img in images if img.annotation == 'pleine' and img.file_size_kb and img.mean_color %}
+                    { x: {{ img.file_size_kb }}, y: {{ img.mean_color }} },
+                  {% endfor %}
+                ],
+                backgroundColor: '#dc3545'
+              },
+              {
+                label: 'Vide',
+                data: [
+                  {% for img in images if img.annotation == 'vide' and img.file_size_kb and img.mean_color %}
+                    { x: {{ img.file_size_kb }}, y: {{ img.mean_color }} },
+                  {% endfor %}
+                ],
+                backgroundColor: '#198754'
+              }
+            ]
+          };
+
+          const scatterChart = new Chart(document.getElementById('scatterChart').getContext('2d'), {
+            type: 'scatter',
+            data: scatterData,
+            options: {
+              responsive: true,
+              plugins: {
+                title: {
+                  display: true,
+                  text: 'Taille (KB) vs Couleur moyenne (RVB)'
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(ctx) {
+                      return `Taille: ${ctx.parsed.x.toFixed(2)} KB, Couleur: ${ctx.parsed.y.toFixed(2)}`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Taille (KB)'
+                  }
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: 'Couleur moyenne'
+                  }
+                }
+              }
+            }
+          });
+        </script>
+      </div>
+
+      <!-- Répartition des images par jour de la semaine -->
+      <div class="mb-5 text-center">
+        <h5>Répartition des images par jour de la semaine</h5>
+        <div style="max-width: 700px; margin: auto;">
+          <canvas id="weekdayChart"></canvas>
+        </div>
+        <script>
+          const weekdayChart = new Chart(document.getElementById('weekdayChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: {{ weekday_labels|tojson }},
+              datasets: [{
+                label: 'Nombre d\'images',
+                data: {{ weekday_counts|tojson }},
+                backgroundColor: '#6f42c1'
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                title: {
+                  display: true,
+                  text: 'Images uploadées par jour'
+                },
+                legend: { display: false }
+              },
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Jour de la semaine'
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Nombre d\'images'
+                  }
+                }
+              }
+            }
+          });
+        </script>
+      </div>
+
+      <!-- Détails des images -->
+      <div class="row">
+        {% for img in images %}
+        <div class="col-md-4 mb-4">
+          <div class="card shadow-sm">
+            <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}" class="card-img-top" alt="image">
+            <div class="card-body">
+              <h5 class="card-title">
+                {% if img.annotation %}
+                  {{ img.annotation|capitalize }}
+                {% else %}
+                  Non annotée
+                {% endif %}
+              </h5>
+              <p class="card-text">
+                Dimensions : {{ img.width }}x{{ img.height }} px<br>
+                Taille : {{ "%.2f"|format(img.file_size_kb) }} KB<br>
+                Latitude : {{ img.latitude if img.latitude is not none else '–' }}<br>
+                Longitude : {{ img.longitude if img.longitude is not none else '–' }}
+              </p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Leaflet Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      var map = L.map('map').setView([48.8566, 2.3522], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      {% for img in images %}
+        {% if img.latitude is not none and img.longitude is not none %}
+          L.marker([{{ img.latitude }}, {{ img.longitude }}])
+            .addTo(map)
+            .bindPopup("<strong>{{ img.annotation|capitalize }}</strong><br>{{ img.filename }}");
+        {% endif %}
+      {% endfor %}
+    </script>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgid "Total d’images"
+msgstr "Total d’images"
+
+msgid "Images Annotées"
+msgstr "Images Annotées"
+
+msgid "Images Pleines"
+msgstr "Images Pleines"
+
+msgid "Images Vides"
+msgstr "Images Vides"
+
+msgid "Uploader une image de poubelle"
+msgstr "Uploader une image de poubelle"
+
+msgid "Envoyer"
+msgstr "Envoyer"
+
+msgid "Annoter l'image"
+msgstr "Annoter l'image"
+
+msgid "Latitude :"
+msgstr "Latitude :"
+
+msgid "Longitude :"
+msgstr "Longitude :"
+
+msgid "Confirmer : Pleine"
+msgstr "Confirmer : Pleine"
+
+msgid "Confirmer : Vide"
+msgstr "Confirmer : Vide"
+
+msgid "Retour au dashboard"
+msgstr "Retour au dashboard"
+
+msgid "Prédiction automatique :"
+msgstr "Prédiction automatique :"
