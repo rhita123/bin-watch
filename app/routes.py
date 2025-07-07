@@ -15,10 +15,12 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+ # Page d'accueil avec formulaire d'upload
 @main.route('/')
 def index():
     return render_template('index.html')
 
+ # Traitement de l'image uploadée : sauvegarde, extraction des features, prédiction, enregistrement en base
 @main.route('/upload', methods=['POST'])
 def upload():
     if 'image' not in request.files:
@@ -55,11 +57,13 @@ def upload():
         return redirect(url_for('main.annotate', filename=new_filename))
     return 'Format de fichier non autorisé', 400
 
+ # Page d'annotation d'une image spécifique
 @main.route('/annotate/<filename>', methods=['GET'])
 def annotate(filename):
     image = Image.query.filter_by(filename=filename).first()
     return render_template('annotate.html', image=image)
 
+ # Enregistrement de l'annotation manuelle et des coordonnées GPS
 @main.route('/annotate/<filename>/annotation', methods=['POST'])
 def save_annotation(filename):
     image = Image.query.filter_by(filename=filename).first()
@@ -89,6 +93,7 @@ def save_annotation(filename):
     flash("Annotation et coordonnées enregistrées avec succès.", "success")
     return redirect(url_for('main.dashboard'))
 
+ # Affichage du tableau de bord avec filtres et graphiques
 @main.route('/dashboard')
 def dashboard():
     filter_value = request.args.get('filter')
@@ -187,6 +192,7 @@ def dashboard():
         weekday_counts=weekday_counts
     )
 
+ # Route pour changer la langue via l'URL (ex: /set_language/en)
 @main.route('/set_language/<lang_code>')
 def set_language(lang_code):
     if lang_code in ['en', 'fr']:
@@ -194,6 +200,7 @@ def set_language(lang_code):
     return redirect(request.referrer or url_for('main.index'))
 
 
+ # Téléchargement de toutes les images et métadonnées au format CSV
 @main.route('/download')
 def download_csv():
     images = Image.query.all()
@@ -224,6 +231,7 @@ def download_csv():
 
 from flask import request, session, redirect, url_for
 
+ # Route alternative pour changer la langue via une requête GET (?lang=fr)
 @main.route('/set_language')
 def set_language_query():
     lang = request.args.get('lang')

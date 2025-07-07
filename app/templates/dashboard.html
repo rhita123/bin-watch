@@ -35,6 +35,7 @@
   </head>
   <body class="p-4">
 
+    <!-- Barre de navigation avec liens vers les pages principales et sélecteur de langue -->
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
       <div class="container-fluid">
@@ -58,12 +59,14 @@
       </div>
     </nav>
 
+    <!-- Conteneur principal du tableau de bord -->
     <div class="container">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">BinWatch – Dashboard</h1>
         <a href="{{ url_for('main.download_csv') }}" class="btn btn-success">Télécharger CSV</a>
       </div>
 
+      <!-- Affichage des statistiques globales des annotations -->
       <!-- Statistiques -->
       <div class="row mb-4">
         <div class="col-md-4">
@@ -86,6 +89,7 @@
         </div>
       </div>
 
+      <!-- Formulaire de filtrage par annotation, taille et date -->
       <!-- Filtres -->
       <form method="get" class="filter-form mb-4">
         <label for="filter" class="form-label">Filtrer par annotation :</label>
@@ -102,10 +106,12 @@
         <input type="date" name="min_date" class="form-control" value="{{ selected_min_date or '' }}" onchange="this.form.submit()">
       </form>
 
+      <!-- Carte affichant les localisations des images avec Leaflet -->
       <!-- Carte -->
       <h5>Carte des localisations</h5>
       <div id="map"></div>
 
+      <!-- Graphique Chart.js : Répartition des annotations (camembert) -->
       <!-- Camembert dynamique avec Chart.js -->
       <div class="mb-5 text-center">
         <h5>Répartition des annotations (Chart.js)</h5>
@@ -168,6 +174,7 @@
         </script>
       </div>
 
+      <!-- Graphique Chart.js : Histogramme des tailles de fichiers -->
       <!-- Histogramme dynamique des tailles -->
       <div class="mb-5 text-center">
         <h5>Histogramme des tailles de fichiers (Chart.js)</h5>
@@ -214,6 +221,7 @@
         </script>
       </div>
 
+      <!-- Graphique Chart.js : Courbe cumulative des images uploadées -->
       <!-- Courbe cumulative dynamique -->
       <div class="mb-5 text-center">
         <h5>Courbe cumulative des images uploadées (Chart.js)</h5>
@@ -264,6 +272,7 @@
         </script>
       </div>
 
+      <!-- Graphique Chart.js : Nuage de points taille vs couleur moyenne -->
       <!-- Nuage de points : taille vs couleur moyenne -->
       <div class="mb-5 text-center">
         <h5>Nuage de points : taille vs couleur moyenne</h5>
@@ -332,6 +341,7 @@
         </script>
       </div>
 
+      <!-- Graphique Chart.js : Répartition des images par jour de la semaine -->
       <!-- Répartition des images par jour de la semaine -->
       <div class="mb-5 text-center">
         <h5>Répartition des images par jour de la semaine</h5>
@@ -378,6 +388,7 @@
         </script>
       </div>
 
+      <!-- Affichage des vignettes des images annotées -->
       <!-- Détails des images -->
       <div class="row">
         {% for img in images %}
@@ -405,6 +416,7 @@
       </div>
     </div>
 
+    <!-- Script d'affichage de la carte Leaflet avec marqueurs dynamiques -->
     <!-- Leaflet Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>

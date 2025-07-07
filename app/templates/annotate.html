@@ -7,6 +7,7 @@
 </head>
 <body class="bg-light py-5">
 
+<!-- Barre de navigation avec liens vers l'upload, le dashboard et le sélecteur de langue -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container">
         <a class="navbar-brand" href="{{ url_for('main.index') }}">BinWatch</a>
@@ -23,13 +24,16 @@
     </div>
 </nav>
 
+<!-- Contenu principal de la page d'annotation -->
 <div class="container text-center">
     <h1 class="mb-4">{{ _('Annoter l\'image') }}</h1>
 
+    <!-- Affichage de l'image uploadée à annoter -->
     <div class="mb-3">
         <img src="{{ url_for('static', filename='uploads/' + image.filename) }}" class="img-fluid rounded shadow" style="max-width: 500px;" alt="Image">
     </div>
 
+    <!-- Affichage de la prédiction automatique avec badge coloré -->
     <p class="fs-5"><strong>{{ _('Prédiction automatique :') }}</strong> 
         <span class="badge 
             {% if image.annotation_auto == 'pleine' %}bg-danger
@@ -39,10 +43,12 @@
         </span>
     </p>
 
+    <!-- Affichage d'un message d'erreur si nécessaire -->
     {% if error %}
         <div class="alert alert-warning mt-3">{{ error }}</div>
     {% endif %}
 
+    <!-- Formulaire pour enregistrer l'annotation (pleine ou vide) et saisir les coordonnées -->
     <form method="POST" action="{{ url_for('main.save_annotation', filename=image.filename) }}">
         <div class="row justify-content-center mb-3">
             <div class="col-md-3">
@@ -55,12 +61,14 @@
             </div>
         </div>
 
+        <!-- Boutons d'annotation : Pleine ou Vide -->
         <div class="d-flex justify-content-center gap-4">
             <button type="submit" name="label" value="pleine" class="btn btn-danger btn-lg">{{ _('Confirmer : Pleine') }}</button>
             <button type="submit" name="label" value="vide" class="btn btn-success btn-lg">{{ _('Confirmer : Vide') }}</button>
         </div>
     </form>
 
+    <!-- Bouton de retour vers le dashboard -->
     <div class="mt-4">
         <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">{{ _('Retour au dashboard') }}</a>
     </div>

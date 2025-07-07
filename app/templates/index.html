@@ -7,6 +7,7 @@
 </head>
 <body class="bg-light">
 
+<!-- Barre de navigation avec lien vers le dashboard et sélecteur de langue -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container">
         <a class="navbar-brand" href="{{ url_for('main.index') }}">BinWatch</a>
@@ -22,12 +23,17 @@
     </div>
 </nav>
 
+<!-- Formulaire d'upload d'image avec zone de dépôt et bouton d'envoi -->
 <div class="container text-center">
+    <!-- Titre principal de la page (traduit via Flask-Babel) -->
     <h1 class="mb-4">{{ _('Uploader une image de poubelle') }}</h1>
+    <!-- Formulaire POST avec encodage multipart pour le téléversement d'image -->
     <form method="POST" action="{{ url_for('main.upload') }}" enctype="multipart/form-data" class="p-4 border rounded bg-white shadow-sm">
         <div class="mb-3">
+            <!-- Champ de sélection de fichier image (obligatoire) -->
             <input type="file" name="image" accept="image/*" class="form-control" required>
         </div>
+        <!-- Bouton de soumission du formulaire -->
         <button type="submit" class="btn btn-primary">{{ _('Envoyer') }}</button>
     </form>
 </div>

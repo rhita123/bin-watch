@@ -6,6 +6,7 @@ import base64
 from database.models import Image
 import pandas as pd
 
+ # Génère un diagramme circulaire de la répartition des annotations (pleine, vide, non annotée)
 def generate_annotation_pie_chart():
     pleines = Image.query.filter_by(annotation='pleine').count()
     vides = Image.query.filter_by(annotation='vide').count()
@@ -29,6 +30,7 @@ def generate_annotation_pie_chart():
         sizes.append(non_annotees)
         colors.append('#6c757d')
 
+    # Préparation des données pour le graphique circulaire
     fig, ax = plt.subplots()
     ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
     ax.axis('equal')
@@ -43,12 +45,14 @@ def generate_annotation_pie_chart():
 
     return image_base64
 
+ # Génère un boxplot des tailles de fichiers image (en kilooctets)
 def generate_file_size_boxplot():
     images = Image.query.filter(Image.file_size_kb != None).all()
     file_sizes = [img.file_size_kb for img in images]
     if not file_sizes:
         return None
 
+    # Création du boxplot à partir des tailles de fichiers
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.boxplot(file_sizes, vert=False)
     ax.set_title("Distribution des tailles de fichiers (en KB)")
@@ -63,6 +67,7 @@ def generate_file_size_boxplot():
 
     return image_base64
 
+ # Génère une courbe cumulative du nombre d’images uploadées dans le temps
 def generate_cumulative_curve():
     images = Image.query.filter(Image.date_uploaded != None).all()
     if not images:
@@ -73,6 +78,7 @@ def generate_cumulative_curve():
     df = pd.DataFrame({'date': dates})
     df_count = df.groupby('date').size().cumsum()
 
+    # Génération de la courbe cumulative à partir des dates d'upload
     fig, ax = plt.subplots(figsize=(8, 4))
     df_count.plot(ax=ax)
     ax.set_title("Courbe cumulative des images dans le temps")
