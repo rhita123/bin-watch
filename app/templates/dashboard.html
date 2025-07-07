@@ -389,12 +389,16 @@
       </div>
 
       <!-- Affichage des vignettes des images annotées -->
+      <!-- Affichage des métadonnées au survol de chaque image via l'attribut 'title' -->
       <!-- Détails des images -->
       <div class="row">
         {% for img in images %}
         <div class="col-md-4 mb-4">
           <div class="card shadow-sm">
-            <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}" class="card-img-top" alt="image">
+            <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}"
+                 class="card-img-top"
+                 alt="image"
+                 title="Nom : {{ img.filename }} | Taille : {{ '%.2f'|format(img.file_size_kb) }} KB | Dimensions : {{ img.width }}x{{ img.height }} px">
             <div class="card-body">
               <h5 class="card-title">
                 {% if img.annotation %}
@@ -433,5 +437,60 @@
         {% endif %}
       {% endfor %}
     </script>
+</div>
+
+<!-- Modale Bootstrap pour l’image -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imageModalLabel">Détails de l’image</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalImage" src="" alt="Image" class="img-fluid mb-3">
+        <p id="modalMetadata" class="text-start"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Raccourcis clavier -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const images = document.querySelectorAll('.card-img-top');
+  let currentIndex = 0;
+
+  function showImage(index) {
+    if (index < 0 || index >= images.length) return;
+    const img = images[index];
+    const src = img.src;
+    const title = img.getAttribute('title');
+    document.getElementById('modalImage').src = src;
+    document.getElementById('modalMetadata').innerText = title;
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'ArrowRight') {
+      currentIndex = (currentIndex + 1) % images.length;
+      showImage(currentIndex);
+    } else if (event.key === 'ArrowLeft') {
+      currentIndex = (currentIndex - 1 + images.length) % images.length;
+      showImage(currentIndex);
+    } else if (event.key.toLowerCase() === 'i') {
+      alert(images[currentIndex].getAttribute('title'));
+    }
+  });
+
+  // Initialisation : ajoute un écouteur de clic sur chaque image pour l’ouvrir dans la modale
+  images.forEach((img, index) => {
+    img.addEventListener('click', () => {
+      currentIndex = index;
+      showImage(index);
+    });
+  });
+</script>
   </body>
 </html>

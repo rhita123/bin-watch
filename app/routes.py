@@ -172,6 +172,8 @@ def dashboard():
     weekday_labels = weekday_names
     weekday_counts = [weekday_counts_map.get(i, 0) for i in range(7)]
 
+    from flask_babel import get_locale
+
     return render_template(
         'dashboard.html',
         images=images,
@@ -189,7 +191,8 @@ def dashboard():
         cumulative_labels=cumulative_labels,
         cumulative_counts=cumulative_counts,
         weekday_labels=weekday_labels,
-        weekday_counts=weekday_counts
+        weekday_counts=weekday_counts,
+        get_locale=get_locale
     )
 
  # Route pour changer la langue via l'URL (ex: /set_language/en)
