@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Règles de Classification{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Formulaire pour ajouter une nouvelle règle de classification -->
+    <h2 class="mb-4">Ajouter une règle de classification</h2>
+    <form method="POST" class="mb-5">
+        <!-- Sélection de l'attribut concerné par la règle -->
+        <div class="mb-3">
+            <label for="attribute" class="form-label">Attribut</label>
+            <select name="attribute" class="form-select" required>
+                <option value="file_size_kb">Taille (KB)</option>
+                <option value="contrast">Contraste</option>
+                <option value="edge_count">Contours</option>
+            </select>
+        </div>
+
+        <!-- Sélection de l'opérateur de comparaison -->
+        <div class="mb-3">
+            <label for="operator" class="form-label">Opérateur</label>
+            <select name="operator" class="form-select" required>
+                <option value=">">&gt;</option>
+                <option value="<">&lt;</option>
+                <option value="==">==</option>
+            </select>
+        </div>
+
+        <!-- Saisie de la valeur de seuil -->
+        <div class="mb-3">
+            <label for="value" class="form-label">Valeur</label>
+            <input type="number" step="any" name="value" class="form-control" required>
+        </div>
+
+        <!-- Définition de l'annotation à appliquer si la règle est satisfaite -->
+        <div class="mb-3">
+            <label for="result_annotation" class="form-label">Annotation à appliquer</label>
+            <input type="text" name="result_annotation" class="form-control" required>
+        </div>
+
+        <!-- Bouton pour soumettre le formulaire -->
+        <button type="submit" class="btn btn-primary">Ajouter la règle</button>
+    </form>
+
+    <!-- Affichage des règles déjà enregistrées -->
+    <h3>Règles existantes</h3>
+    {% if rules %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Attribut</th>
+                <th>Opérateur</th>
+                <th>Valeur</th>
+                <th>Annotation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rule in rules %}
+            <tr>
+                <td>{{ rule.attribute }}</td>
+                <td>{{ rule.operator }}</td>
+                <td>{{ rule.value }}</td>
+                <td>{{ rule.result_annotation }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Aucune règle définie.</p>
+    {% endif %}
+</div>
+{% endblock %}
